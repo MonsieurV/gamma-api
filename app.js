@@ -2,16 +2,8 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const basicAuth = require('basic-auth');
 const MongoClient = require('mongodb').MongoClient;
+const callbackToPromise = require('./utils').callbackToPromise;
 const app = express();
-
-// Some flufy stuff to an async/await interface to NodeJs callbacks.
-function callbackToPromise(method, ...args) {
-  return new Promise(function(resolve, reject) {
-    return method(...args, function(err, result) {
-      return err ? reject(err) : resolve(result);
-    });
-  });
-}
 
 (async function() {
   // Connect to MongoDb instance.

@@ -2,6 +2,23 @@ const _ = require('lodash');
 const moment = require('moment');
 
 module.exports = (app, db) => {
+  app.get('/api/v1/events', function (req, res) {
+    // TODO use .skip() for pagination.
+    db.collection('events').find().limit(200).toArray((err, events) => {
+      if (err) {
+        throw err;
+      }
+      res.status(200).json(events.map((event) => {
+        return {
+          type: event.type,
+          position: event.position,
+          timestamp: event.timestamp,
+          api_timestamp: event.api_timestamp
+        }
+      }));
+    });
+  });
+
   app.post('/api/v1/events', function (req, res) {
     const payload = req.body;
     if (!payload.timestamp) {
@@ -48,13 +65,23 @@ module.exports = (app, db) => {
     // TODO Add sensor id?
     const event = {
       timestamp: timestamp.utc().toISOString(),
-      apiTimestamp: moment().utc().format(),
+      api_timestamp: moment().utc().format(),
       type: payload.type,
       position: payload.position
     };
-    console.log(event);
-    // TODO When we insert the data, check for collision:
+    // When we insert the data, check for collision:
     // only one event allowed per date and user.
-    res.sendStatus(201);
+    db.collection('events').findOne({
+      timestamp: event.timestamp, type: event.type,
+      position: event.position }, (err, eventFromDb) => {
+        if (err) {
+          throw err;
+        }
+        if (eventFromDb) {
+          return res.status(400).json('ALREADY_PUBLISHED');
+        }
+        db.collection('events').insert(event);
+        res.sendStatus(201);
+      });
   });
 }
