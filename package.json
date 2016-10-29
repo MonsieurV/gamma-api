@@ -4,7 +4,7 @@
   "description": "An enthusiastic open-data radioactivity API for collecting Gamma ray events",
   "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "run": "nodejs app.js"
   },
   "repository": {
     "type": "git",
@@ -15,11 +15,10 @@
   "bugs": {
     "url": "https://github.com/MonsieurV/gamma-api/issues"
   },
-  "scripts": {
-    "run": "nodejs app.js"
-  },
   "homepage": "https://github.com/MonsieurV/gamma-api#readme",
   "dependencies": {
-    "express": "^4.14.0"
+    "body-parser": "^1.15.2",
+    "express": "^4.14.0",
+    "moment": "^2.15.2"
   }
 }
