@@ -1,31 +1,49 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const moment = require('moment');
+const basicAuth = require('basic-auth');
 const app = express();
 
+// Allows to parse Json payloads.
 app.use(bodyParser.json());
 
 // If we require UUIDs
 // https://github.com/broofa/node-uuid
 
+// After here, all methods are authenticated.
+// Implement HTTP Basic Auth.
+const ADMINS = require('./admins');
+app.use(function(req, res, next) {
+  const credentials = basicAuth(req);
+  if (!credentials) {
+    res.setHeader('WWW-Authenticate', 'Basic realm="Gamma API Auth"');
+    return res.status(401).json('Gamma API requires authentification');
+  }
+  if (
+    !ADMINS[credentials.name]
+    || ADMINS[credentials.name].password !== credentials.pass
+  ) {
+    res.statusCode = 403;
+    res.setHeader('WWW-Authenticate', 'Basic realm="Gamma API Auth"');
+    return res.status(403).json('Invalid credentials');
+  }
+  next();
+});
+
 app.post('/api/v1/events', function (req, res) {
   const payload = req.body;
   if (!payload.timestamp) {
-    res.status(400).json('MISSING_TIMESTAMP');
-    return;
+    return res.status(400).json('MISSING_TIMESTAMP');
   }
   const timestamp = moment(payload.timestamp);
   if (!timestamp || !timestamp.isValid()) {
-    res.status(400).json('INVALID_TIMESTAMP');
-    return;
+    return res.status(400).json('INVALID_TIMESTAMP');
   }
   if (!payload.type) {
-    res.status(400).json('MISSING_TYPE');
-    return;
+    return res.status(400).json('MISSING_TYPE');
   }
   if (payload.type !== 'gamma') {
-    res.status(400).json('INVALID_TYPE');
-    return;
+    return res.status(400).json('INVALID_TYPE');
   }
   // TODO Authenticate and get contributor id from database.
   const event = {

@@ -27,11 +27,9 @@ curl -v -X POST https://gamma.ytotech.com/api/v1/events \
 }'
 ```
 
+We authenticate the requests using HTTP [Basic Auth](https://en.wikipedia.org/wiki/Basic_access_authentication).
+
 The timestamp should be an ISO8601 string. We recommend to send uniquely UTC dates, even if the API parse the zone. (No zone specified default to UTC).
-
-2016-10-29T07:18:30+02:00
-
-2016-10-29T05:18:25Z
 
 ### Data points
 

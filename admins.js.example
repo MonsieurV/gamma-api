@@ -1,0 +1,3 @@
+module.exports = {
+  'yoan@ytotech.com': { password: 'coincoin' }
+}
