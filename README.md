@@ -2,11 +2,11 @@
 
 An enthusiastic open-data radioactivity API for collecting Gamma ray events.
 
-Live at https://gamma.ytotech.com.
+Live at https://gamma.ytotech.com (well, soon). Blog post on the API soon, too. Maybe.
 
 ## Publish radioactivity data
 
-Ask your contributor API tokens to yoan@ytotech.com.
+Ask your contributor API credentials to [yoan@ytotech.com](mailto:yoan@ytotech.com).
 
 ### Gamma ray events
 
@@ -23,11 +23,15 @@ curl -v -X POST https://gamma.ytotech.com/api/v1/events \
 -H "Authorization: Basic <YOUR_API_TOKENS>" \
 -d '{
   "timestamp": "2016-10-29T05:17:51.745Z",
+  "position": {
+    "latitude": 49.418683,
+    "longitude": 2.823469
+  },
   "type": "gamma"
 }'
 ```
 
-We authenticate the requests using HTTP [Basic Auth](https://en.wikipedia.org/wiki/Basic_access_authentication).
+We authenticate the requests using HTTP [Basic Auth](https://en.wikipedia.org/wiki/Basic_access_authentication). Your API credentials must be representend as a string `user:password` and encoded to Base64. This gives something like `eW9hbkB5dG90ZWNoLmNvbTpjb2luY29pbg==` (for user `yoan@ytotech.com` and password `coincoin`).
 
 The timestamp should be an ISO8601 string. We recommend to send uniquely UTC dates, even if the API parse the zone. (No zone specified default to UTC).
 
@@ -46,6 +50,10 @@ curl -v -X POST https://gamma.ytotech.com/api/v1/datapoints \
 -H "Authorization: Basic <YOUR_API_TOKENS>" \
 -d '{
   "timestamp": "2016-10-29T05:17:51.745Z",
+  "position": {
+    "latitude": 49.418683,
+    "longitude": 2.823469
+  },
   {
     "unit": "uSvh",
     "value": "0.058"
@@ -77,4 +85,8 @@ npm install
 npm run run
 ```
 
-You'll need a MongoDb datastore.
+You'll need a MongoDb datastore. You can instantiate one using [Docker](https://www.docker.com/):
+
+```
+docker run --name mongo_for_gamma_API -d mongo -v 127.0.0.1:27017:27017
+```
