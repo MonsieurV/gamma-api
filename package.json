@@ -4,7 +4,8 @@
   "description": "An enthusiastic open-data radioactivity API for collecting Gamma ray events",
   "main": "app.js",
   "scripts": {
-    "run": "nodejs app.js"
+    "run": "babel-node app.js",
+    "build": "babel app.js -o build.js"
   },
   "repository": {
     "type": "git",
@@ -23,5 +24,9 @@
     "lodash": "^4.16.4",
     "moment": "^2.15.2",
     "mongodb": "^2.2.11"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.18.0",
+    "babel-preset-latest": "^6.16.0"
   }
 }
