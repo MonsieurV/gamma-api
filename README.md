@@ -1,6 +1,6 @@
-# gamma-api
+# The YtoTech Gamma Api
 
-An enthusiastic open-data radioactivity API for collecting Gamma ray events.
+> An enthusiastic open-data radioactivity API for collecting Gamma ray events.
 
 Live at https://gamma.ytotech.com (well, soon). Blog post on the API soon, too. Maybe.
 
@@ -90,3 +90,5 @@ You'll need a MongoDb datastore. You can instantiate one using [Docker](https://
 ```
 docker run --name mongo_for_gamma_API -d mongo -v 127.0.0.1:27017:27017
 ```
+
+[Yoan](mailto:yoan@ytotech.com).

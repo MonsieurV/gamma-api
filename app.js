@@ -3,13 +3,28 @@ const bodyParser = require('body-parser');
 const moment = require('moment');
 const basicAuth = require('basic-auth');
 const _ = require('lodash');
+const MongoClient = require('mongodb').MongoClient;
 const app = express();
+
+// Connect to MongoDb instance.
+var db;
+MongoClient.connect('mongodb://localhost:27017/gamma_api', function(err, database) {
+  if (err) {
+    throw err;
+  }
+  console.log("Connected to MongoDb");
+  db = database;
+});
 
 // Allows to parse Json payloads.
 app.use(bodyParser.json());
 
 // If we require UUIDs
 // https://github.com/broofa/node-uuid
+
+app.get('/', function (req, res) {
+  res.redirect('https://github.com/MonsieurV/gamma-api');
+});
 
 // After here, all methods are authenticated.
 // Implement HTTP Basic Auth.
@@ -94,4 +109,10 @@ app.post('/api/v1/events', function (req, res) {
 
 app.listen(3000, function () {
   console.log('Gamma API listening on port 3000');
+});
+
+process.on('exit', function() {
+  // Close db connection.
+  console.log("Close connection to MongoDb");
+  db.close();
 });
