@@ -23,23 +23,11 @@ const hashSha512 = require('./utils').hashSha512;
 
   // After here, all methods are authenticated.
   // Implement HTTP Basic Auth.
-  const ADMINS = require('./admins');
   app.use(function(req, res, next) {
     const credentials = basicAuth(req);
     if (!credentials) {
       res.setHeader('WWW-Authenticate', 'Basic realm="Gamma API Auth"');
       return res.status(401).json('Gamma API requires authentification');
-    }
-    if (
-      ADMINS[credentials.name]
-      && ADMINS[credentials.name].password === credentials.pass
-    ) {
-      req.user = {
-        email: credentials.name,
-        password: credentials.pass,
-        isAdmin: true
-      };
-      return next();
     }
     db.collection('users').findOne(
       { email: credentials.name, password: hashSha512(credentials.pass) },
