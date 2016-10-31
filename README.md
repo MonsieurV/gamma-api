@@ -10,6 +10,8 @@ Ask your contributor API credentials to [yoan@ytotech.com](mailto:yoan@ytotech.c
 
 ### Gamma ray events
 
+// TODO This doc is already obsolete. Send me an email so I update it.
+
 Then, publish your Gamma ray events with:
 
 ```
