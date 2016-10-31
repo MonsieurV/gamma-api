@@ -87,7 +87,7 @@ module.exports = (app, db) => {
         // only one event allowed per date and user.
         db.collection('events').findOne(
           {
-            type: event.type, position: event.position,
+            type: event.type, timestamp: event.timestamp,
             user: req.user.email, deviceId: req.body.deviceId
           },
           (err, eventFromDb) => {
