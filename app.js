@@ -4,6 +4,7 @@ const basicAuth = require('basic-auth');
 const MongoClient = require('mongodb').MongoClient;
 const callbackToPromise = require('./utils').callbackToPromise;
 const app = express();
+const hashSha512 = require('./utils').hashSha512;
 
 (async function() {
   // Connect to MongoDb instance.
@@ -30,14 +31,30 @@ const app = express();
       return res.status(401).json('Gamma API requires authentification');
     }
     if (
-      !ADMINS[credentials.name]
-      || ADMINS[credentials.name].password !== credentials.pass
+      ADMINS[credentials.name]
+      && ADMINS[credentials.name].password === credentials.pass
     ) {
-      res.statusCode = 403;
-      res.setHeader('WWW-Authenticate', 'Basic realm="Gamma API Auth"');
-      return res.status(403).json('Invalid credentials');
+      req.user = {
+        email: credentials.name,
+        password: credentials.pass,
+        isAdmin: true
+      };
+      return next();
     }
-    next();
+    db.collection('users').findOne(
+      { email: credentials.name, password: hashSha512(credentials.pass) },
+      (err, user) => {
+        if (err) {
+          throw err;
+        }
+        if (!user) {
+          res.statusCode = 403;
+          res.setHeader('WWW-Authenticate', 'Basic realm="Gamma API Auth"');
+          return res.status(403).json('Invalid credentials');
+        }
+        req.user = user;
+        next();
+    });
   });
 
   require('./apiAuth')(app, db);
