@@ -6,7 +6,8 @@
   "scripts": {
     "run-babel": "babel-node src/app.js",
     "run-build": "babel-node src/app.js",
-    "build": "babel src/app.js -o build.js"
+    "build": "babel src/app.js -o build.js",
+    "format-code": "prettier --write src"
   },
   "repository": {
     "type": "git",
@@ -25,7 +26,8 @@
     "jssha": "^2.2.0",
     "lodash": "^4.16.4",
     "moment": "^2.15.2",
-    "mongodb": "^2.2.11"
+    "mongodb": "^2.2.11",
+    "prettier": "^2.2.1"
   },
   "devDependencies": {
     "babel-cli": "^6.18.0",
