@@ -2,7 +2,7 @@
   "name": "gamma-api",
   "version": "0.0.1",
   "description": "An enthusiastic open-data radioactivity API for collecting Gamma ray events",
-  "main": "app.js",
+  "main": "src/app.js",
   "scripts": {
     "run-babel": "babel-node src/app.js",
     "run-build": "node src/app.js",
@@ -20,17 +20,17 @@
   },
   "homepage": "https://github.com/MonsieurV/gamma-api#readme",
   "dependencies": {
-    "basic-auth": "^1.0.4",
-    "body-parser": "^1.15.2",
-    "express": "^4.14.0",
-    "jssha": "^2.2.0",
-    "lodash": "^4.16.4",
-    "moment": "^2.15.2",
-    "mongodb": "^2.2.11",
-    "prettier": "^2.2.1"
+    "basic-auth": "^2.0.1",
+    "body-parser": "^1.19.0",
+    "express": "^4.17.1",
+    "jssha": "^3.2.0",
+    "lodash": "^4.17.20",
+    "moment": "^2.29.1",
+    "mongodb": "^3.6.4"
   },
   "devDependencies": {
-    "babel-cli": "^6.18.0",
-    "babel-preset-latest": "^6.16.0"
+    "babel-cli": "^6.26.0",
+    "babel-preset-latest": "^6.24.1",
+    "prettier": "^2.2.1"
   }
 }
