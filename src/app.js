@@ -1,3 +1,4 @@
+const process = require('process');
 const express = require('express');
 const bodyParser = require('body-parser');
 const basicAuth = require('basic-auth');
@@ -6,10 +7,17 @@ const callbackToPromise = require('./utils').callbackToPromise;
 const app = express();
 const hashSha512 = require('./utils').hashSha512;
 
+const DEFAULT_MONGO_DB_URI = 'mongodb://localhost:27017/gamma_api'
+
 (async function() {
   // Connect to MongoDb instance.
-  const db = await callbackToPromise(MongoClient.connect,
-    'mongodb://localhost:27017/gamma_api');
+  if (!process.env.MONGO_DB_URI) {
+    console.warn(`No env MONGO_DB_URI defined; defaulting to ${DEFAULT_MONGO_DB_URI}`)
+  }
+  const db = await callbackToPromise(
+    MongoClient.connect,
+    process.env.MONGO_DB_URI || DEFAULT_MONGO_DB_URI,
+  );
   console.log("Connected to MongoDb");
 
   // Allows to parse Json payloads.
