@@ -7,8 +7,8 @@ services:
       dockerfile: ./Dockerfile
     depends_on:
       - mongo_db
-    volumes:
-      - ./:/app
+    # volumes:
+    #   - ./:/app
     links:
       - mongo_db
     ports:

@@ -4,13 +4,12 @@ RUN mkdir /app
 
 WORKDIR /app
 
-ADD \
-    src \
-    .babelrc \
+ADD .babelrc \
     package.json package-lock.json \
-  app/
+  /app/
+RUN npm install
 
-RUN npm instal
+ADD src /app/src
 RUN npm run build
 
 EXPOSE 3000

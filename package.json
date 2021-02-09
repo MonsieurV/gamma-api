@@ -5,7 +5,7 @@
   "main": "app.js",
   "scripts": {
     "run-babel": "babel-node src/app.js",
-    "run-build": "babel-node src/app.js",
+    "run-build": "node src/app.js",
     "build": "babel src/app.js -o build.js",
     "format-code": "prettier --write src"
   },
