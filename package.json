@@ -4,7 +4,7 @@
   "description": "An enthusiastic open-data radioactivity API for collecting Gamma ray events",
   "main": "src/app.js",
   "scripts": {
-    "run": "babel-node src/app.js",
+    "run": "node src/app.js",
     "run-reload": "nodemon src/app.js",
     "format-code": "prettier --write src"
   },
