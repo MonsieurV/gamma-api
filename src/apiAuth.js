@@ -1,66 +1,59 @@
 const _ = require("lodash");
 const moment = require("moment");
-const validateEmail = require("./utils").validateEmail;
-const hashSha512 = require("./utils").hashSha512;
-const ObjectId = require("mongodb").ObjectId;
+const { validateEmail } = require("./utils");
+const { hashSha512 } = require("./utils");
+const { ObjectId } = require("mongodb");
 
 module.exports = (app, db) => {
-  app.get("/api/v1/events", function (req, res) {
+  app.get("/api/v1/events", async function (req, res) {
+    if (!req.user.isAdmin) {
+      return res.sendStatus(403);
+    }
     // TODO use .skip() for pagination.
     // TODO Allows to get data from all users.
     // TODO Load user and sensor data.
-    db.collection("events")
-      .find({})
-      .limit(200)
-      .toArray((err, events) => {
-        if (err) {
-          throw err;
-        }
-        res.status(200).json(
-          events.map((event) => {
-            return {
-              type: event.type,
-              position: event.position,
-              timestamp: event.timestamp,
-              api_timestamp: event.api_timestamp,
-              user: event.user,
-              deviceId: event.deviceId,
-            };
-          })
-        );
-      });
+    const events = await db.collection("events").find({}).limit(200).toArray();
+    res.status(200).json(
+      events.map((event) => {
+        return {
+          type: event.type,
+          position: event.position,
+          timestamp: event.timestamp,
+          api_timestamp: event.api_timestamp,
+          user: event.user,
+          deviceId: event.deviceId,
+        };
+      })
+    );
   });
 
-  app.get("/api/v1/me/events", function (req, res) {
+  app.get("/api/v1/me/events", async function (req, res) {
     // TODO use .skip() for pagination.
     // TODO Load user and sensor data.
-    db.collection("events")
+    const events = await db
+      .collection("events")
       .find({
         user: req.user.email,
       })
       .limit(200)
-      .toArray((err, events) => {
-        if (err) {
-          throw err;
-        }
-        res.status(200).json(
-          events.map((event) => {
-            return {
-              type: event.type,
-              position: event.position,
-              timestamp: event.timestamp,
-              api_timestamp: event.api_timestamp,
-              user: {
-                email: req.user.email,
-              },
-              deviceId: event.deviceId,
-            };
-          })
-        );
-      });
+      .toArray();
+    res.status(200).json(
+      events.map((event) => {
+        return {
+          type: event.type,
+          position: event.position,
+          timestamp: event.timestamp,
+          api_timestamp: event.api_timestamp,
+          user: {
+            email: req.user.email,
+          },
+          deviceId: event.deviceId,
+        };
+      })
+    );
   });
 
-  app.post("/api/v1/events", function (req, res) {
+  app.post("/api/v1/events", async function (req, res) {
     if (!req.body.timestamp) {
       return res.status(400).json("MISSING_TIMESTAMP");
     }
@@ -77,65 +70,51 @@ module.exports = (app, db) => {
     if (!req.body.deviceId) {
       return res.status(400).json("MISSING_DEVICE_ID");
     }
-    db.collection("devices").findOne(
-      { user: req.user.email, _id: new ObjectId(req.body.deviceId) },
-      (err, device) => {
-        if (err) {
-          throw err;
-        }
-        if (!device) {
-          return res.status(400).json("DEVICE_NOT_FOUND");
-        }
-        const event = {
-          timestamp: timestamp.utc().toISOString(),
-          api_timestamp: moment().utc().format(),
-          type: req.body.type,
-          user: req.user.email,
-          deviceId: req.body.deviceId,
-        };
-        // When we insert the data, check for collision:
-        // only one event allowed per date and user.
-        db.collection("events").findOne(
-          {
-            type: event.type,
-            timestamp: event.timestamp,
-            user: req.user.email,
-            deviceId: req.body.deviceId,
-          },
-          (err, eventFromDb) => {
-            if (err) {
-              throw err;
-            }
-            if (eventFromDb) {
-              return res.status(400).json("ALREADY_PUBLISHED");
-            }
-            // TODO Check return insert.
-            db.collection("events").insert(event);
-            res.sendStatus(201);
-          }
-        );
-      }
-    );
+    const device = await db
+      .collection("devices")
+      .findOne({ user: req.user.email, _id: new ObjectId(req.body.deviceId) });
+    if (!device) {
+      return res.status(400).json("DEVICE_NOT_FOUND");
+    }
+    const event = {
+      timestamp: timestamp.utc().toISOString(),
+      api_timestamp: moment().utc().format(),
+      type: req.body.type,
+      user: req.user.email,
+      deviceId: req.body.deviceId,
+    };
+    // When we insert the data, check for collision:
+    // only one event allowed per date and user.
+    const eventFromDb = await db.collection("events").findOne({
+      type: event.type,
+      timestamp: event.timestamp,
+      user: req.user.email,
+      deviceId: req.body.deviceId,
+    });
+    if (eventFromDb) {
+      return res.status(400).json("ALREADY_PUBLISHED");
+    }
+    // TODO Check return insert.
+    db.collection("events").insertOne(event);
+    res.sendStatus(201);
   });
 
-  app.get("/api/v1/me", function (req, res) {
-    db.collection("devices")
+  app.get("/api/v1/me", async function (req, res) {
+    // TODO Return counts of events, total, by devices, etc.
+    const devices = await db
+      .collection("devices")
       .find({
         user: req.user.email,
       })
       .limit(200)
-      .toArray((err, devices) => {
-        if (err) {
-          throw err;
-        }
-        res.status(200).json({
-          email: req.user.email,
-          devices: devices,
-        });
-      });
+      .toArray();
+    res.status(200).json({
+      email: req.user.email,
+      devices: devices,
+    });
   });
 
-  app.post("/api/v1/users", function (req, res) {
+  app.post("/api/v1/users", async function (req, res) {
     if (!req.user.isAdmin) {
       return res.sendStatus(403);
     }
@@ -158,25 +137,24 @@ module.exports = (app, db) => {
     } else {
       req.body.isAdmin = false;
     }
-    db.collection("users").findOne({ email: req.body.email }, (err, user) => {
-      if (err) {
-        throw err;
-      }
-      if (user) {
-        return res.status(400).json("EMAIL_ALREADY_REGISTERED");
-      }
-      db.collection("users").insert({
-        email: req.body.email,
-        password: hashSha512(req.body.password),
-        isAdmin: req.body.isAdmin,
-      });
-      res.sendStatus(201);
+    const user = await db
+      .collection("users")
+      .findOne({ email: req.body.email });
+    if (user) {
+      return res.status(400).json("EMAIL_ALREADY_REGISTERED");
+    }
+    await db.collection("users").insertOne({
+      email: req.body.email,
+      password: hashSha512(req.body.password),
+      isAdmin: req.body.isAdmin,
     });
+    res.sendStatus(201);
   });
 
-  app.put("/api/v1/users/:email", function (req, res) {
-    if (!req.user.isAdmin) {
-      return res.status(403);
+  app.patch("/api/v1/users/:email", async function (req, res) {
+    const patch = {};
+    if (!req.user.isAdmin && req.user.email !== req.params.email) {
+      return res.sendStatus(403);
     }
     if (!req.params.email) {
       return res.status(400).json("MISSING_EMAIL");
@@ -184,64 +162,66 @@ module.exports = (app, db) => {
     if (req.body.email) {
       return res.status(400).json("CAN_NOT_CHANGE_EMAIL");
     }
-    if (!req.body.password) {
-      return res.status(400).json("MISSING_PASSWORD");
+    if (req.body.hasOwnProperty("password")) {
+      if (!_.isString(req.body.password) || req.body.password.length < 10) {
+        return res.status(400).json("INVALID_PASSWORD");
+      }
+      patch.password = hashSha512(req.body.password);
     }
-    if (!_.isString(req.body.password) || req.body.password.length < 10) {
-      return res.status(400).json("INVALID_PASSWORD");
-    }
-    if (req.body.isAdmin) {
+    if (req.body.hasOwnProperty("isAdmin")) {
+      if (!req.user.isAdmin) {
+        return res.sendStatus(403);
+      }
       if (!_.isBoolean(req.body.isAdmin)) {
         return res.status(400).json("INVALID_IS_ADMIN");
       }
-    } else {
-      req.body.isAdmin = false;
+      patch.isAdmin = req.body.isAdmin;
     }
-    db.collection("users").update(
+    const result = await db.collection("users").updateOne(
       { email: req.params.email },
       {
-        $set: {
-          password: hashSha512(req.body.password),
-          isAdmin: req.body.isAdmin,
-        },
-      },
-      (err, result) => {
-        if (err) {
-          throw err;
-        }
-        if (result.result.n === 0) {
-          return res.status(404).json("USER_NOT_FOUND");
-        }
-        res.sendStatus(204);
+        $set: patch,
       }
     );
+    if (result.matchedCount === 0) {
+      return res.status(404).json("USER_NOT_FOUND");
+    }
+    res.sendStatus(204);
   });
 
-  app.delete("/api/v1/users/:email", function (req, res) {
+  app.delete("/api/v1/users/:email", async function (req, res) {
     if (!req.user.isAdmin) {
-      return res.status(403);
+      return res.sendStatus(403);
     }
     if (!req.params.email) {
       return res.status(400).json("MISSING_EMAIL");
     }
-    db.collection("users").remove(
-      { email: req.params.email },
-      { justOne: true },
-      (err, result) => {
-        if (err) {
-          throw err;
-        }
-        if (result.result.n === 0) {
-          return res.status(404).json("USER_NOT_FOUND");
-        }
-        // TODO Delete also all devices? events?
-        // Or just tag the user as deleted and keep the data? (soft delete)
-        res.sendStatus(204);
-      }
-    );
+    const result = await db
+      .collection("users")
+      .deleteOne({ email: req.params.email });
+    if (result.deletedCount === 0) {
+      return res.status(404).json("USER_NOT_FOUND");
+    }
+    // TODO Delete also all devices? events?
+    // Or just tag the user as deleted and keep the data? (soft delete)
+    res.sendStatus(204);
   });
 
-  app.post("/api/v1/devices", function (req, res) {
+  app.get("/api/v1/devices", async function (req, res) {
+    if (!req.user.isAdmin) {
+      return res.sendStatus(403);
+    }
+    // TODO use .skip() for pagination.
+    // TODO Load user and sensor data.
+    const devices = await db
+      .collection("devices")
+      .find({})
+      .limit(200)
+      .toArray();
+    res.status(200).json(devices.map((device) => device));
+  });
+
+  app.post("/api/v1/devices", async function (req, res) {
     if (!req.body.manufacturer) {
       return res.status(400).json("MISSING_MANUFACTURER");
     }
@@ -292,49 +272,35 @@ module.exports = (app, db) => {
       user: req.user.email,
     };
     // When we insert the data, check for collision.
-    db.collection("devices").findOne(device, (err, deviceFromDb) => {
-      if (err) {
-        throw err;
-      }
-      // Already return device to allows for call before each publication session,
-      // without having to GET the list of devices.
-      if (deviceFromDb) {
-        return res.status(200).json(deviceFromDb);
-      }
-      // TODO Check return insert.
-      db.collection("devices").insertOne(device, (err, result) => {
-        if (err) {
-          throw err;
-        }
-        device["_id"] = result.insertedId.toString();
-        // Return so user get the id.
-        res.status(201).json(device);
-      });
-    });
+    const deviceFromDb = await db.collection("devices").findOne(device);
+    // Already return device to allows for call before each publication session,
+    // without having to GET the list of devices.
+    if (deviceFromDb) {
+      return res.status(200).json(deviceFromDb);
+    }
+    // TODO Check return insert.
+    const result = await db.collection("devices").insertOne(device);
+    device["_id"] = result.insertedId.toString();
+    // Return so user get the id.
+    res.status(201).json(device);
   });
 
-  app.delete("/api/v1/devices/:id", function (req, res) {
+  app.delete("/api/v1/devices/:id", async function (req, res) {
     // TODO Do not authorize if published data for the device?
     // Or add device on the events directly (will renerage bunch of data!)
     // Or soft delete?
     if (!req.user.isAdmin) {
-      return res.status(403);
+      return res.sendStatus(403);
     }
     if (!req.params.id) {
       return res.status(400).json("MISSING_ID");
     }
-    db.collection("devices").remove(
-      { user: req.user.email, _id: req.params.id },
-      { justOne: true },
-      (err, result) => {
-        if (err) {
-          throw err;
-        }
-        if (result.result.n === 0) {
-          return res.status(404).json("DEVICE_NOT_FOUND");
-        }
-        res.sendStatus(204);
-      }
-    );
+    const result = await db
+      .collection("devices")
+      .deleteOne({ user: req.user.email, _id: req.params.id });
+    if (result.deletedCount === 0) {
+      return res.status(404).json("DEVICE_NOT_FOUND");
+    }
+    res.sendStatus(204);
   });
 };

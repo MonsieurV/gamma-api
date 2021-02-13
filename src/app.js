@@ -2,10 +2,9 @@ const process = require("process");
 const express = require("express");
 const bodyParser = require("body-parser");
 const basicAuth = require("basic-auth");
-const MongoClient = require("mongodb").MongoClient;
-const callbackToPromise = require("./utils").callbackToPromise;
+const { MongoClient } = require("mongodb");
 const app = express();
-const hashSha512 = require("./utils").hashSha512;
+const { hashSha512 } = require("./utils");
 
 const DEFAULT_MONGO_DB_URI = "mongodb://localhost:27017/gamma_api";
 
@@ -16,11 +15,12 @@ const DEFAULT_MONGO_DB_URI = "mongodb://localhost:27017/gamma_api";
       `No env MONGO_DB_URI defined; defaulting to ${DEFAULT_MONGO_DB_URI}`
     );
   }
-  const db = await callbackToPromise(
-    MongoClient.connect,
-    process.env.MONGO_DB_URI || DEFAULT_MONGO_DB_URI
-  );
+  const uri = process.env.MONGO_DB_URI || DEFAULT_MONGO_DB_URI;
+  const client = MongoClient(uri, { useUnifiedTopology: true });
+  await client.connect();
   console.log("Connected to MongoDb");
+  await client.db("gamma_api").command({ ping: 1 });
+  const db = client.db("gamma_api");
 
   // Allows to parse Json payloads.
   app.use(bodyParser.json());
@@ -33,27 +33,22 @@ const DEFAULT_MONGO_DB_URI = "mongodb://localhost:27017/gamma_api";
 
   // After here, all methods are authenticated.
   // Implement HTTP Basic Auth.
-  app.use(function (req, res, next) {
+  app.use(async function (req, res, next) {
     const credentials = basicAuth(req);
     if (!credentials) {
       res.setHeader("WWW-Authenticate", 'Basic realm="Gamma API Auth"');
       return res.status(401).json("Gamma API requires authentification");
     }
-    db.collection("users").findOne(
-      { email: credentials.name, password: hashSha512(credentials.pass) },
-      (err, user) => {
-        if (err) {
-          throw err;
-        }
-        if (!user) {
-          res.statusCode = 403;
-          res.setHeader("WWW-Authenticate", 'Basic realm="Gamma API Auth"');
-          return res.status(403).json("Invalid credentials");
-        }
-        req.user = user;
-        next();
-      }
-    );
+    const user = await db.collection("users").findOne({
+      email: credentials.name,
+      password: hashSha512(credentials.pass),
+    });
+    if (!user) {
+      res.setHeader("WWW-Authenticate", 'Basic realm="Gamma API Auth"');
+      return res.status(401).json("Invalid credentials");
+    }
+    req.user = user;
+    next();
   });
 
   require("./apiAuth")(app, db);
