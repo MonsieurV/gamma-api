@@ -3,7 +3,7 @@ version: '3'
 services:
   mongo_db:
     image: mongo:latest
-    restart: always
+    # restart: always
     ports:
       - "27017:27017"
   mongo_express:
@@ -14,7 +14,7 @@ services:
       - mongo_db
     ports:
       - "8081:8081"
-    restart: always
+    # restart: always
     environment:
       ME_CONFIG_MONGODB_SERVER: mongo_db
       ME_CONFIG_BASICAUTH_USERNAME: ""
