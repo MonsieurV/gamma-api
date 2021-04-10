@@ -6,6 +6,10 @@ services:
     # restart: always
     ports:
       - "27017:27017"
+    environment:
+      # MONGO_DB_URI: mongodb://admin:adminpw@mongo_db:27017/gamma_api?authSource=admin
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: adminpw
   mongo_express:
     image:  mongo-express:latest
     depends_on:
@@ -14,7 +18,9 @@ services:
       - mongo_db
     ports:
       - "8081:8081"
-    # restart: always
+    restart: on-failure
     environment:
       ME_CONFIG_MONGODB_SERVER: mongo_db
       ME_CONFIG_BASICAUTH_USERNAME: ""
+      ME_CONFIG_MONGODB_ADMINUSERNAME: admin
+      ME_CONFIG_MONGODB_ADMINPASSWORD: adminpw

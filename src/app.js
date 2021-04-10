@@ -6,7 +6,7 @@ const { MongoClient } = require("mongodb");
 const app = express();
 const { hashSha512 } = require("./utils");
 
-const DEFAULT_MONGO_DB_URI = "mongodb://localhost:27017/gamma_api";
+const DEFAULT_MONGO_DB_URI = "mongodb://admin:adminpw@localhost:27017/gamma_api?authSource=admin";
 
 (async function () {
   // Connect to MongoDb instance.
