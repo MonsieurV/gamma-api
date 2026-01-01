@@ -20,8 +20,8 @@
   "homepage": "https://github.com/MonsieurV/gamma-api#readme",
   "dependencies": {
     "basic-auth": "^2.0.1",
-    "body-parser": "^1.20.3",
-    "express": "^4.21.2",
+    "body-parser": "^1.20.4",
+    "express": "^4.22.1",
     "jssha": "^3.2.0",
     "lodash": "^4.17.21",
     "moment": "^2.29.4",
